@@ -1,0 +1,56 @@
+{
+  "name": "@vinsjo/use-axios",
+  "version": "1.0.0",
+  "description": "A react hook for making HTTP requests with Axios",
+  "author": "Vincent Sjögren",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vinsjo/use-axios"
+  },
+  "type": "module",
+  "source": "./src/index.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "umd:main": "./dist/index.umd.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "require": "./dist/index.cjs",
+      "import": "./dist/index.js",
+      "default": "./dist/index.modern.js"
+    }
+  },
+  "files": [
+    "src",
+    "dist"
+  ],
+  "browserslist": [
+    "defaults and supports es6-module"
+  ],
+  "scripts": {
+    "build": "microbundle",
+    "dev": "microbundle watch",
+    "prepublishOnly": "npm run build",
+    "lint": "npx eslint src --ext .ts"
+  },
+  "devDependencies": {
+    "@types/react": "latest",
+    "@typescript-eslint/eslint-plugin": "^5.36.2",
+    "@typescript-eslint/parser": "^5.36.2",
+    "eslint": "^8.23.1",
+    "eslint-plugin-react": "^7.31.8",
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "microbundle": "latest"
+  },
+  "keywords": [
+    "react",
+    "axios",
+    "microbundle"
+  ],
+  "dependencies": {
+    "axios": "latest",
+    "react": "latest",
+    "x-is-equal": "latest"
+  }
+}
