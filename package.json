@@ -1,6 +1,6 @@
 {
   "name": "@vinsjo/use-axios",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A react hook for making HTTP requests with Axios",
   "author": "Vincent Sjögren",
   "license": "MIT",
