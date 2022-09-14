@@ -103,7 +103,7 @@ function useAxios<T = unknown, D = unknown>(
 					payload: res,
 				});
 			} catch (err: Error | AxiosError | unknown) {
-				if (axios.isCancel(err)) return console.log('cancel error');
+				if (axios.isCancel(err)) return;
 				dispatch({
 					type: 'error',
 					payload: err as Error | AxiosError<T, D>,
