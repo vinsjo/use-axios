@@ -1,4 +1,5 @@
 // Based on https://usehooks-ts.com/react-hook/use-fetch
+/* eslint-disable no-mixed-spaces-and-tabs */
 /* eslint-disable react-hooks/exhaustive-deps */
 import {
 	useState,
@@ -29,25 +30,26 @@ export type Cache<T, D> = {
 		response: AxiosResponse<T, D>;
 	};
 };
-
-function useUpdatedConfig<D>(config: AxiosRequestConfig<D>) {
-	const ref = useRef<AxiosRequestConfig<D>>(config);
-	useEffect(() => {
-		if (!config || (ref.current && isEqual(config, ref.current))) return;
-		ref.current = config;
-	}, [config]);
-	return useMemo(
-		() => (ref.current !== undefined ? ref.current : config),
-		[ref, config]
-	);
-}
-
+/**
+ *
+ * @param initialConfig AxiosRequestConfig object.
+ * Can be updated with updateConfig function
+ * @param reloadLimit
+ * Limit how often reload function can be triggered, in milliseconds.
+ * Default is 500
+ * @param waitUntilMount
+ * Wait until componentDidMount is invoked to execute axios request.
+ * Set to true to prevent executing request twice when React.Strictmode is on.
+ * Default value is false.
+ */
 function useAxios<T = unknown, D = unknown>(
-	axiosConfig: AxiosRequestConfig<D>,
-	reloadLimit = 500
+	initialConfig: AxiosRequestConfig<D>,
+	reloadLimit = 500,
+	waitUntilMount = false
 ) {
-	const config = useUpdatedConfig(axiosConfig);
+	const [config, setConfig] = useState(initialConfig);
 	const [didMount, setDidMount] = useState(false);
+
 	const [forceReload, setForceReload] = useState(0);
 	const cache = useRef<Cache<T, D>>({});
 
@@ -56,6 +58,7 @@ function useAxios<T = unknown, D = unknown>(
 		error: undefined,
 		loading: false,
 	};
+
 	const stateReducer = (
 		state: State<T, D>,
 		action: Action<T, D>
@@ -76,8 +79,9 @@ function useAxios<T = unknown, D = unknown>(
 		stateReducer,
 		initialState
 	);
+
 	useEffect(() => {
-		if (!didMount) return setDidMount(true);
+		if (waitUntilMount && !didMount) return setDidMount(true);
 		if (typeof config.url !== 'string') return;
 		const cached = cache.current[config.url];
 		// Only fetch from cache if config hasn't changed
@@ -88,15 +92,16 @@ function useAxios<T = unknown, D = unknown>(
 			});
 			return;
 		}
-		const controller = new AbortController();
+		const controller = config.signal ? null : new AbortController();
 		(async () => {
-			if (typeof config.url !== 'string') return;
-			dispatch({ type: 'loading' });
 			try {
-				const res = await axios({
-					...config,
-					signal: controller.signal,
-				});
+				if (typeof config.url !== 'string') return;
+				dispatch({ type: 'loading' });
+				const res = await axios(
+					!controller
+						? config
+						: { ...config, signal: controller.signal }
+				);
 				cache.current[config.url] = { response: res, config };
 				dispatch({
 					type: 'response',
@@ -110,8 +115,8 @@ function useAxios<T = unknown, D = unknown>(
 				});
 			}
 		})();
-		return () => controller.abort();
-	}, [didMount, config, forceReload]);
+		return () => controller?.abort();
+	}, [config, didMount, forceReload]);
 
 	const reload = useCallback(() => {
 		if (typeof config.url !== 'string') return;
@@ -123,7 +128,21 @@ function useAxios<T = unknown, D = unknown>(
 		);
 	}, [cache, config, setForceReload, reloadLimit]);
 
-	return { data: response?.data, loading, error, response, reload };
+	const updateConfig = useCallback(
+		(updatedConfig: AxiosRequestConfig) => setConfig(updatedConfig),
+		[config, setConfig]
+	);
+	return useMemo(
+		() => ({
+			data: !response ? null : response.data,
+			loading,
+			error,
+			response,
+			reload,
+			updateConfig,
+		}),
+		[response, loading, error, reload, updateConfig]
+	);
 }
 
 export default useAxios;
