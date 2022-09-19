@@ -1,4 +1,3 @@
-// Based on https://usehooks-ts.com/react-hook/use-fetch
 /* eslint-disable no-mixed-spaces-and-tabs */
 import {
 	useState,
