@@ -82,9 +82,15 @@ function validateConfig<D>(config?: UseAxiosConfig<D>): UseAxiosConfig<D> {
 function getRequestURL(config?: AxiosRequestConfig): string {
 	if (typeof config?.url !== 'string') return '';
 	const { url, baseURL } = config;
-	return /^(http:\/\/|https:\/\/)/i.test(url)
-		? url
-		: new URL(url, baseURL).toString();
+	if (typeof baseURL !== 'string' || /^(http:\/\/|https:\/\/)/i.test(url)) {
+		return url;
+	}
+	try {
+		return new URL(url, baseURL).toString();
+	} catch (err) {
+		err.message && console.error(err.message);
+		return '';
+	}
 }
 async function makeRequest<T = unknown, D = unknown>(
 	config?: AxiosRequestConfig<D>,
