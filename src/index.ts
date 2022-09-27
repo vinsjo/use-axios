@@ -1,4 +1,3 @@
-/* eslint-disable no-mixed-spaces-and-tabs */
 import {
 	useState,
 	useEffect,
@@ -87,8 +86,9 @@ function getRequestURL(config?: AxiosRequestConfig): string {
 	}
 	try {
 		return new URL(url, baseURL).toString();
-	} catch (err) {
-		err.message && console.error(err.message);
+		// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	} catch (err: Error | any) {
+		if (err.message) console.error(err.message);
 		return '';
 	}
 }
@@ -116,7 +116,7 @@ async function makeRequest<T = unknown, D = unknown>(
 export default function useAxios<T = unknown, D = unknown>(
 	config?: UseAxiosConfig<D>
 ): UseAxiosReturnType<T, D> {
-	const [currentConfig, setCurrentConfig] = useState<UseAxiosConfig<D>>(() =>
+	const [currentConfig, setCurrentConfig] = useState<UseAxiosConfig<D>>(
 		validateConfig(config)
 	);
 
@@ -134,32 +134,32 @@ export default function useAxios<T = unknown, D = unknown>(
 		() => getRequestURL(currentConfig),
 		[currentConfig]
 	);
-
-	const initialState: State<T, D> = {
-		response: null,
-		error: null,
-		loading: false,
-	};
-
-	const stateReducer = (
-		state: State<T, D>,
-		action: Action<T, D>
-	): State<T, D> => {
-		switch (action.type) {
-			case 'loading':
-				return { ...initialState, loading: true };
-			case 'response':
-				return { ...initialState, response: action.payload };
-			case 'error':
-				console.log('error');
-				return { ...initialState, error: action.payload };
-			default:
-				return state;
-		}
-	};
 	const [{ response, loading, error }, dispatch] = useReducer(
-		stateReducer,
-		initialState
+		(prevState: State<T, D>, action: Action<T, D>): State<T, D> => {
+			switch (action.type) {
+				case 'loading':
+					return { ...prevState, loading: true };
+				case 'response':
+					return {
+						response: action.payload,
+						loading: false,
+						error: null,
+					};
+				case 'error':
+					return {
+						...prevState,
+						loading: false,
+						error: action.payload,
+					};
+				default:
+					return prevState;
+			}
+		},
+		{
+			response: null,
+			error: null,
+			loading: false,
+		}
 	);
 
 	const triggerRequest = useCallback<SendRequestCallback<D>>(
