@@ -11,15 +11,17 @@ Package is bundled using [microbundle](https://www.npmjs.com/package/microbundle
 ## Usage
 
 ```js
-    const { data, loading, error } = useAxios({
-		url: 'http://example.com/api',
-	});
+const { data, loading, error } = useAxios({
+    url: 'http://example.com/api',
+});
 ```
+
 ### With TypeScript
+
 ```ts
-    const { data, loading, error } = useAxios<{message: string}>({
-		url: 'http://example.com/api',
-	});
+const { data, loading, error } = useAxios<{ message: string }>({
+    url: 'http://example.com/api',
+});
 ```
 
 ## Example
@@ -28,19 +30,19 @@ Package is bundled using [microbundle](https://www.npmjs.com/package/microbundle
 import useAxios from '@vinsjo/use-axios';
 
 const Example = () => {
-    const { data, loading, error } = useAxios<{message: string}>({
-		url: 'http://example.com/api',
-	});
-	return (
-		<>
-			{data
-				? data.message
-				: error
-				? error.message
-				: loading
-				? 'Loading...'
-				: null}
-		</>
-	);
+    const { data, loading, error } = useAxios<{ message: string }>({
+        url: 'http://example.com/api',
+    });
+    return (
+        <>
+            {data
+                ? data.message
+                : error
+                ? error.message
+                : loading
+                ? 'Loading...'
+                : null}
+        </>
+    );
 };
 ```
