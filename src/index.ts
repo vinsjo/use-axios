@@ -8,6 +8,7 @@ import {
 } from 'react';
 import axios from 'axios';
 import { isEqual } from 'x-is-equal';
+import { isStr, isNum } from 'x-is-type/callbacks';
 import type { AxiosRequestConfig, AxiosError, AxiosResponse } from 'axios';
 
 /**
@@ -79,9 +80,9 @@ function validateConfig<D>(config?: UseAxiosConfig<D>): UseAxiosConfig<D> {
     };
 }
 function getRequestURL(config?: AxiosRequestConfig): string {
-    if (typeof config?.url !== 'string') return '';
+    if (!config || isStr(config?.url)) return '';
     const { url, baseURL } = config;
-    if (typeof baseURL !== 'string' || /^(http:\/\/|https:\/\/)/i.test(url)) {
+    if (!isStr(config.baseURL) || /^(http:\/\/|https:\/\/)/i.test(url)) {
         return url;
     }
     try {
@@ -126,7 +127,7 @@ export default function useAxios<T = unknown, D = unknown>(
     }, [currentConfig]);
 
     const [lastRequestTime, setLastRequestTime] = useState(0);
-    const didMount = useRef(false);
+    const [didMount, setDidMount] = useState(false);
     const cache = useRef<Cache<T, D>>({});
     const requestTimeout = useRef<number>(0);
 
@@ -179,11 +180,7 @@ export default function useAxios<T = unknown, D = unknown>(
                 setLastRequestTime(Date.now());
                 requestTimeout.current = 0;
             };
-            if (
-                !requestLimit ||
-                typeof requestLimit !== 'number' ||
-                Number.isNaN(requestLimit)
-            ) {
+            if (!isNum(requestLimit) || requestLimit <= 0) {
                 return onTimeout();
             }
 
@@ -202,9 +199,7 @@ export default function useAxios<T = unknown, D = unknown>(
     );
 
     useEffect(() => {
-        if (waitUntilMount && !didMount.current) {
-            didMount.current = true;
-        }
+        if (waitUntilMount && !didMount) return setDidMount(true);
         if (!currentURL || (!autoExecute && !lastRequestTime)) return;
 
         const cached = cache.current[currentURL];
