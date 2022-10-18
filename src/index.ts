@@ -39,7 +39,7 @@ export interface UseAxiosConfig<D = unknown> extends AxiosRequestConfig<D> {
 }
 
 export type Action<T, D> =
-    | { type: 'loading' }
+    | { type: 'loading'; payload?: undefined }
     | { type: 'response'; payload: AxiosResponse<T, D> }
     | { type: 'error'; payload: Error | AxiosError<T, D> };
 
@@ -69,18 +69,12 @@ function validateConfig<D>(config?: UseAxiosConfig<D>): UseAxiosConfig<D> {
     const { autoExecute, waitUntilMount } = config;
     return {
         ...config,
-        autoExecute:
-            autoExecute === undefined
-                ? defaultConfig.autoExecute
-                : !!autoExecute,
-        waitUntilMount:
-            waitUntilMount === undefined
-                ? defaultConfig.waitUntilMount
-                : !!waitUntilMount,
+        autoExecute: autoExecute ?? defaultConfig.autoExecute,
+        waitUntilMount: waitUntilMount ?? defaultConfig.autoExecute,
     };
 }
 function getRequestURL(config?: AxiosRequestConfig): string {
-    if (!config || isStr(config?.url)) return '';
+    if (!config || !isStr(config?.url)) return '';
     const { url, baseURL } = config;
     if (!isStr(config.baseURL) || /^(http:\/\/|https:\/\/)/i.test(url)) {
         return url;
@@ -132,17 +126,19 @@ export default function useAxios<T = unknown, D = unknown>(
     const requestTimeout = useRef<number>(0);
 
     const currentURL = useMemo(
-        () => getRequestURL(currentConfig),
-        [currentConfig]
+        () => getRequestURL(requestConfig),
+        [requestConfig]
     );
+
     const [{ response, loading, error }, dispatch] = useReducer(
         (prevState: State<T, D>, action: Action<T, D>): State<T, D> => {
-            switch (action.type) {
+            const { type, payload } = action;
+            switch (type) {
                 case 'loading':
                     return { ...prevState, loading: true };
                 case 'response':
                     return {
-                        response: action.payload,
+                        response: payload,
                         loading: false,
                         error: null,
                     };
@@ -150,7 +146,7 @@ export default function useAxios<T = unknown, D = unknown>(
                     return {
                         ...prevState,
                         loading: false,
-                        error: action.payload,
+                        error: payload,
                     };
                 default:
                     return prevState;
